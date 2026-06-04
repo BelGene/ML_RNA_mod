@@ -1,0 +1,46 @@
+project_name: ML_RNA_mod
+random_seed: 42
+
+paths:
+  raw_dir: data/raw
+  manual_dir: data/manual
+  interim_dir: data/interim
+  processed_dir: data/processed
+  legacy_pilot_dir: ../edl933-rnamod-phage-pilot
+
+sources:
+  uniprot:
+    enabled: true
+    fetch: false
+    reviewed_only: true
+    include_trembl_expansion: false
+    query_config: configs/queries_uniprot.yaml
+    raw_tsv: data/raw/uniprot/uniprot_records.tsv
+  rhea:
+    enabled: true
+    fetch: false
+    raw_tsv: data/raw/rhea/rhea-reactions.tsv
+  go:
+    enabled: true
+    fetch: false
+    raw_obo: data/raw/go/go-basic.obo
+  modomics:
+    enabled: true
+    manual_table: data/manual/modomics_import.tsv
+  ecocyc:
+    enabled: true
+    manual_table: data/manual/ecocyc_import.tsv
+  manual_literature:
+    enabled: true
+    table: data/manual/literature_seeds.tsv
+  legacy_pilot:
+    enabled: true
+    positive_fasta: ../edl933-rnamod-phage-pilot/resources/seeds/expanded_positive_rnamod_seeds.faa
+    negative_fasta: ../edl933-rnamod-phage-pilot/resources/seeds/expanded_negative_nonrna_seeds.faa
+    metadata: ../edl933-rnamod-phage-pilot/resources/seeds/expanded_seed_metadata.tsv
+
+dataset:
+  exclude_hypothetical_from_hard_negatives: true
+  keep_sequence_missing_records: true
+  deterministic_sort: true
+

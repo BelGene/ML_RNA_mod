@@ -1,0 +1,36 @@
+uniprot_endpoint: https://rest.uniprot.org/uniprotkb/search
+fields:
+  - accession
+  - reviewed
+  - id
+  - protein_name
+  - gene_names
+  - organism_name
+  - organism_id
+  - lineage
+  - length
+  - sequence
+  - go_id
+  - ec
+  - rhea
+  - interpro
+  - keyword
+  - cc_function
+
+queries:
+  - query_id: reviewed_bacterial_rna_modification
+    label_hint: positive
+    query: '(reviewed:true) AND (taxonomy_id:2) AND (keyword:"RNA modification")'
+  - query_id: reviewed_bacterial_trna_modification
+    label_hint: positive
+    query: '(reviewed:true) AND (taxonomy_id:2) AND ((protein_name:tRNA AND protein_name:methyltransferase) OR protein_name:pseudouridine OR protein_name:thiouridylase)'
+  - query_id: reviewed_bacterial_rrna_modification
+    label_hint: positive
+    query: '(reviewed:true) AND (taxonomy_id:2) AND ((protein_name:rRNA AND protein_name:methyltransferase) OR gene:rlu* OR gene:rsm* OR gene:rlm*)'
+  - query_id: reviewed_dna_methyltransferase_negative
+    label_hint: negative
+    query: '(reviewed:true) AND (taxonomy_id:2) AND ((protein_name:"DNA methyltransferase") OR gene:dam OR gene:dcm OR gene:hsdM)'
+  - query_id: reviewed_nonrna_deaminase_negative
+    label_hint: negative
+    query: '(reviewed:true) AND (taxonomy_id:2) AND ((protein_name:"cytidine deaminase") OR protein_name:"nucleotide deaminase") NOT (protein_name:tRNA)'
+

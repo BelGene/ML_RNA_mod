@@ -1,0 +1,72 @@
+label_status:
+  - gold_positive
+  - silver_positive
+  - bronze_candidate
+  - hard_negative
+  - easy_negative
+  - unknown
+  - conflicted
+
+role_labels:
+  - writer
+  - eraser
+  - reader_or_cofactor
+  - sulfur_relay
+  - RNA_cap_processing
+  - nonRNA_enzyme
+  - unknown
+
+target_rna_labels:
+  - tRNA
+  - rRNA
+  - mRNA
+  - tmRNA
+  - ncRNA
+  - mixed_RNA
+  - DNA
+  - protein
+  - small_molecule
+  - unknown
+
+modification_scope_labels:
+  - methylation
+  - pseudouridylation
+  - deamination
+  - thiolation
+  - queuosine
+  - lysidine
+  - isopentenylation
+  - RNA_cap_or_terminal
+  - RNAylation
+  - nonRNA_modification
+  - unknown
+
+chemistry_labels:
+  - SAM_methyltransferase
+  - SPOUT_methyltransferase
+  - FAD_dependent_methyltransferase
+  - radical_SAM
+  - pseudouridine_synthase
+  - deaminase
+  - thiouridylase
+  - queuosine_pathway
+  - tRNA_ligase_or_synthetase
+  - Nudix_hydrolase
+  - ADP_ribosyltransferase
+  - DNA_methyltransferase
+  - protein_methyltransferase
+  - small_molecule_methyltransferase
+  - unknown
+
+site_bucket_labels:
+  - anticodon_loop
+  - wobble_position_34
+  - position_37
+  - tRNA_body
+  - rRNA_decoding_center
+  - rRNA_peptidyl_transferase_center
+  - rRNA_other
+  - RNA_5prime_cap_or_end
+  - protein_or_nonRNA
+  - unknown
+

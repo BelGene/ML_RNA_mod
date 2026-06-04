@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ML_RNA_mod"
+version = "0.1.0"
+description = "Curated benchmark dataset for bacterial and phage RNA-modification proteins"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "biopython>=1.83",
+  "duckdb>=0.10",
+  "pandas>=2.1",
+  "polars>=0.20",
+  "pyarrow>=14",
+  "pydantic>=1.10",
+  "PyYAML>=6",
+  "requests>=2.31",
+  "typer>=0.9",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "snakemake>=8"]
+
+[project.scripts]
+rnmod = "rnmod.cli:app"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+

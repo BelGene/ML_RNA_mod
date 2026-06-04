@@ -1,0 +1,13 @@
+.snakemake/
+.pytest_cache/
+__pycache__/
+*.pyc
+*.egg-info/
+.DS_Store
+data/raw/*
+!data/raw/.gitkeep
+data/interim/**/*.parquet
+data/processed/*
+!data/processed/.gitkeep
+logs/
+

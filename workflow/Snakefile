@@ -1,0 +1,90 @@
+configfile: "configs/config.yaml"
+
+rule all:
+    input:
+        "data/processed/rnmod_master.parquet",
+        "data/processed/rnmod_master.tsv.gz",
+        "data/processed/rnmod_sequences.faa",
+        "data/processed/rnmod_label_matrix.parquet",
+        "data/processed/source_manifest.tsv",
+        "data/processed/rnmod_dataset_card.md"
+
+rule ingest_uniprot:
+    output:
+        "data/interim/uniprot/uniprot_records.parquet"
+    conda:
+        "envs/ml_rna_mod.yml"
+    shell:
+        "PYTHONPATH=src python -m rnmod.cli ingest-uniprot --config configs/config.yaml --output {output}"
+
+rule ingest_rhea:
+    output:
+        "data/interim/rhea/rhea_reactions.parquet"
+    conda:
+        "envs/ml_rna_mod.yml"
+    shell:
+        "PYTHONPATH=src python -m rnmod.cli ingest-rhea --config configs/config.yaml --output {output}"
+
+rule ingest_go:
+    output:
+        "data/interim/go/go_terms.parquet"
+    conda:
+        "envs/ml_rna_mod.yml"
+    shell:
+        "PYTHONPATH=src python -m rnmod.cli ingest-go --config configs/config.yaml --output {output}"
+
+rule ingest_modomics:
+    output:
+        "data/interim/modomics/modomics_records.parquet"
+    conda:
+        "envs/ml_rna_mod.yml"
+    shell:
+        "PYTHONPATH=src python -m rnmod.cli ingest-modomics --config configs/config.yaml --output {output}"
+
+rule ingest_ecocyc:
+    output:
+        "data/interim/ecocyc/ecocyc_records.parquet"
+    conda:
+        "envs/ml_rna_mod.yml"
+    shell:
+        "PYTHONPATH=src python -m rnmod.cli ingest-ecocyc --config configs/config.yaml --output {output}"
+
+rule ingest_manual_literature:
+    input:
+        "data/manual/literature_seeds.tsv"
+    output:
+        "data/interim/manual_literature/manual_literature_records.parquet"
+    conda:
+        "envs/ml_rna_mod.yml"
+    shell:
+        "PYTHONPATH=src python -m rnmod.cli ingest-manual-literature --config configs/config.yaml --output {output}"
+
+rule ingest_legacy_pilot:
+    output:
+        "data/interim/legacy_pilot/legacy_pilot_records.parquet"
+    conda:
+        "envs/ml_rna_mod.yml"
+    shell:
+        "PYTHONPATH=src python -m rnmod.cli ingest-legacy-pilot --config configs/config.yaml --output {output}"
+
+rule build_master:
+    input:
+        uniprot="data/interim/uniprot/uniprot_records.parquet",
+        rhea="data/interim/rhea/rhea_reactions.parquet",
+        go="data/interim/go/go_terms.parquet",
+        modomics="data/interim/modomics/modomics_records.parquet",
+        ecocyc="data/interim/ecocyc/ecocyc_records.parquet",
+        manual="data/interim/manual_literature/manual_literature_records.parquet",
+        legacy="data/interim/legacy_pilot/legacy_pilot_records.parquet"
+    output:
+        master="data/processed/rnmod_master.parquet",
+        master_tsv="data/processed/rnmod_master.tsv.gz",
+        fasta="data/processed/rnmod_sequences.faa",
+        labels="data/processed/rnmod_label_matrix.parquet",
+        manifest="data/processed/source_manifest.tsv",
+        card="data/processed/rnmod_dataset_card.md"
+    conda:
+        "envs/ml_rna_mod.yml"
+    shell:
+        "PYTHONPATH=src python -m rnmod.cli build-master --config configs/config.yaml"
+

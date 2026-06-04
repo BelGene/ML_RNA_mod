@@ -1,0 +1,36 @@
+evidence_level_scores:
+  experimental_direct: 1.00
+  reviewed_swissprot: 0.90
+  reviewed_swissprot_query: 0.85
+  curated_pathway_database: 0.85
+  structural_supported: 0.80
+  reviewed_homolog: 0.75
+  annotated_homolog_day1: 0.60
+  annotation_control_day1: 0.60
+  unreviewed_homolog: 0.45
+  manual_hypothesis: 0.35
+  product_annotation_only: 0.20
+  product_annotation_day1: 0.20
+  unknown: 0.00
+
+status_scores:
+  gold_positive: 1.00
+  silver_positive: 0.75
+  bronze_candidate: 0.45
+  hard_negative: 0.90
+  easy_negative: 0.50
+  unknown: 0.00
+  conflicted: 0.00
+
+training_policy:
+  positive_statuses:
+    - gold_positive
+    - silver_positive
+  negative_statuses:
+    - hard_negative
+  candidate_only_statuses:
+    - bronze_candidate
+  excluded_statuses:
+    - unknown
+    - conflicted
+    - easy_negative

@@ -1,0 +1,21 @@
+name: ML_RNA_mod_workflow
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - python=3.11
+  - biopython
+  - duckdb
+  - pandas
+  - polars
+  - pyarrow
+  - pydantic
+  - pyyaml
+  - requests
+  - typer
+  - pytest
+  - mmseqs2
+  - hmmer
+  - mafft
+
