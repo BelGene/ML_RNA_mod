@@ -93,6 +93,86 @@ python scripts/03_poc/02_train_embedding_logreg.py \
 The trainer mean-pools each embedding and fits one-vs-rest logistic-regression
 models for MODOMICS enzyme-type labels with cross-validation.
 
+## Weak-Label UniProt POC Workflow
+
+Use this path when you want a larger no-manual-curation proof of concept before
+committing to curated database expansion. It combines MODOMICS tRNA anchors with
+automated reviewed-UniProt text-query positives and reviewed non-tRNA controls.
+
+Build the default small weak-label dataset:
+
+```bash
+python scripts/03_poc/03_build_weak_uniprot_trna_dataset.py
+```
+
+The default `small` profile caps live UniProt query results and focuses the
+weak-label expansion on bacteria/archaea so the first embedding run stays
+manageable. Larger runs are available with:
+
+```bash
+python scripts/03_poc/03_build_weak_uniprot_trna_dataset.py --profile standard
+python scripts/03_poc/03_build_weak_uniprot_trna_dataset.py --profile full
+```
+
+This writes:
+
+```text
+data/processed/poc_weak/weak_trna_mod_proteins.tsv
+data/processed/poc_weak/weak_trna_mod_sequences.faa
+data/processed/poc_weak/weak_trna_mod_label_matrix.tsv
+data/processed/poc_weak/weak_trna_mod_dataset_card.md
+```
+
+Primary label:
+
+```text
+target__trna_modifier
+```
+
+Optional broad mechanism labels are emitted as `mechanism__...` columns. These
+labels are weak and should be evaluated with cluster-heldout splits before being
+interpreted.
+
+Create cluster-heldout splits:
+
+```bash
+python scripts/03_poc/04_cluster_split_sequences.py
+```
+
+This writes:
+
+```text
+data/processed/poc_weak/splits/mmseqs50/cluster_membership.tsv
+data/processed/poc_weak/splits/mmseqs50/cluster_assignments.tsv
+data/processed/poc_weak/splits/mmseqs50/split_assignments.tsv
+data/processed/poc_weak/splits/mmseqs50/split_summary.tsv
+data/processed/poc_weak/splits/mmseqs50/cluster_split_card.md
+```
+
+After generating embeddings for `weak_trna_mod_sequences.faa`, train the first
+binary classifier:
+
+```bash
+python scripts/03_poc/05_train_weak_embedding_logreg.py \
+  --embedding-dir path/to/embeddings \
+  --task binary
+```
+
+For the recommended high-quality GPU embedding run with ESM-C 6B, use:
+
+```bash
+python scripts/03_poc/06_embed_sequences_esmc.py \
+  --fasta data/processed/poc_weak/weak_trna_mod_sequences.faa \
+  --output-dir data/processed/poc_weak/embeddings/esmc_6b \
+  --model-name biohub/ESMC-6B \
+  --max-tokens-per-batch 4096 \
+  --device-map auto \
+  --device cuda
+```
+
+On Bridges/Slurm, see `docs/POC_ESMC_BRIDGES.md` and
+`scripts/03_poc/bridges_esmc_embed.sbatch`.
+
 ## Pipeline Order
 
 1. `scripts/00_data_download/00_download_sources.py` downloads configured public raw sources.

@@ -13,3 +13,4 @@ data/processed/*
 !data/processed/README.md
 !data/processed/.gitkeep
 logs/
+.local_tools/
