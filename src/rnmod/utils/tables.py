@@ -1,5 +1,11 @@
 from __future__ import annotations
 
+# ---------------------------------------------------------------------------
+# User parameters
+# ---------------------------------------------------------------------------
+# This is a library module. Change routine pipeline parameters in
+# configs/config.yaml or in the numbered scripts under scripts/.
+
 import json
 from pathlib import Path
 from typing import Iterable

@@ -1,9 +1,18 @@
 from __future__ import annotations
 
+# ---------------------------------------------------------------------------
+# User parameters
+# ---------------------------------------------------------------------------
+# This is a library module. Change routine pipeline parameters in
+# configs/config.yaml or in the numbered scripts under scripts/.
+
 from pathlib import Path
 from typing import Any
 
 import yaml
+
+
+DEFAULT_CONFIG = "configs/config.yaml"
 
 
 def load_config(path: str | Path = "configs/config.yaml") -> dict[str, Any]:
@@ -28,3 +37,10 @@ def project_path(config: dict[str, Any], key: str) -> Path:
         raise KeyError(f"Missing config paths.{key}") from exc
     return Path(value)
 
+
+def interim_path(config: dict[str, Any], source_name: str, filename: str) -> Path:
+    return project_path(config, "interim_dir") / source_name / filename
+
+
+def processed_path(config: dict[str, Any], filename: str) -> Path:
+    return project_path(config, "processed_dir") / filename

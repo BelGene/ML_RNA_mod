@@ -1,9 +1,14 @@
 from __future__ import annotations
 
+# ---------------------------------------------------------------------------
+# User parameters
+# ---------------------------------------------------------------------------
+# This is a library module. Change routine pipeline parameters in
+# configs/config.yaml or in the numbered scripts under scripts/.
+
 import time
 from io import StringIO
 from pathlib import Path
-from urllib.parse import urlencode
 
 import pandas as pd
 import requests
@@ -14,7 +19,12 @@ from rnmod.labels.evidence import status_from_evidence
 from rnmod.settings import load_config
 
 
-def _read_query_config(path: str | Path) -> dict:
+DEFAULT_PAGE_SIZE = 500
+DEFAULT_TIMEOUT_SECONDS = 120
+REQUEST_PAUSE_SECONDS = 0.2
+
+
+def read_query_config(path: str | Path) -> dict:
     query_path = Path(path)
     if not query_path.exists():
         return {"queries": [], "fields": []}
@@ -22,9 +32,26 @@ def _read_query_config(path: str | Path) -> dict:
         return yaml.safe_load(handle) or {"queries": [], "fields": []}
 
 
-def _download_uniprot(config: dict, query_config: dict, raw_tsv: Path) -> None:
+def _raise_for_uniprot_status(response: requests.Response) -> None:
+    try:
+        response.raise_for_status()
+    except requests.HTTPError as exc:
+        message = response.text.strip().splitlines()[-1:] or [str(exc)]
+        raise RuntimeError(f"UniProt request failed: {message[0]}") from exc
+
+
+def _frame_from_tsv(text: str) -> pd.DataFrame:
+    stripped = text.strip()
+    if not stripped:
+        return pd.DataFrame()
+    return pd.read_csv(StringIO(stripped), sep="\t", dtype=str, keep_default_na=False)
+
+
+def download_uniprot_raw(query_config: dict, raw_tsv: str | Path, timeout: int = DEFAULT_TIMEOUT_SECONDS) -> None:
     endpoint = query_config.get("uniprot_endpoint", "https://rest.uniprot.org/uniprotkb/search")
     fields = ",".join(query_config.get("fields", []))
+    page_size = int(query_config.get("page_size", DEFAULT_PAGE_SIZE))
+    raw_tsv = Path(raw_tsv)
     raw_tsv.parent.mkdir(parents=True, exist_ok=True)
     frames: list[pd.DataFrame] = []
     for query in query_config.get("queries", []):
@@ -32,19 +59,22 @@ def _download_uniprot(config: dict, query_config: dict, raw_tsv: Path) -> None:
             "query": query["query"],
             "format": "tsv",
             "fields": fields,
-            "size": 500,
+            "size": page_size,
         }
-        url = endpoint + "?" + urlencode(params)
-        response = requests.get(url, timeout=60)
-        response.raise_for_status()
-        text = response.text.strip()
-        if not text:
-            continue
-        temp = pd.read_csv(StringIO(text), sep="\t", dtype=str, keep_default_na=False)
-        temp["rnmod_query_id"] = query.get("query_id", "")
-        temp["rnmod_label_hint"] = query.get("label_hint", "")
-        frames.append(temp)
-        time.sleep(0.2)
+        next_url: str | None = endpoint
+        while next_url:
+            if next_url == endpoint:
+                response = requests.get(endpoint, params=params, timeout=timeout)
+            else:
+                response = requests.get(next_url, timeout=timeout)
+            _raise_for_uniprot_status(response)
+            temp = _frame_from_tsv(response.text)
+            if not temp.empty:
+                temp["rnmod_query_id"] = query.get("query_id", "")
+                temp["rnmod_label_hint"] = query.get("label_hint", "")
+                frames.append(temp)
+            next_url = response.links.get("next", {}).get("url")
+            time.sleep(REQUEST_PAUSE_SECONDS)
     if frames:
         pd.concat(frames, ignore_index=True).to_csv(raw_tsv, sep="\t", index=False)
     else:
@@ -61,11 +91,13 @@ def _column(row: pd.Series, *names: str) -> str:
 def ingest(config_path: str | Path, output: str | Path) -> pd.DataFrame:
     config = load_config(config_path)
     source_cfg = config["sources"]["uniprot"]
-    query_config = _read_query_config(source_cfg.get("query_config", "configs/queries_uniprot.yaml"))
+    if not source_cfg.get("enabled", True):
+        return write_records([], output)
+    query_config = read_query_config(source_cfg.get("query_config", "configs/queries_uniprot.yaml"))
     raw_tsv = Path(source_cfg.get("raw_tsv", "data/raw/uniprot/uniprot_records.tsv"))
 
-    if source_cfg.get("fetch", False):
-        _download_uniprot(config, query_config, raw_tsv)
+    if source_cfg.get("fetch", False) and not raw_tsv.exists():
+        download_uniprot_raw(query_config, raw_tsv)
 
     if not raw_tsv.exists() or raw_tsv.stat().st_size == 0:
         return write_records([], output)

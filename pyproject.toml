@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "ML_RNA_mod"
 version = "0.1.0"
-description = "Curated benchmark dataset for bacterial and phage RNA-modification proteins"
+description = "Auditable dataset pipeline for machine learning prediction of tRNA modification proteins"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
@@ -32,4 +32,3 @@ where = ["src"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
-

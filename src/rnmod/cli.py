@@ -7,13 +7,22 @@ import typer
 from rnmod.dataset.build_master_table import build as build_master_table
 from rnmod.ingest import ecocyc, go, legacy_pilot, manual_literature, modomics, rhea, uniprot
 
-app = typer.Typer(help="Build the ML_RNA_mod curated RNA-modification protein dataset.")
+# ---------------------------------------------------------------------------
+# User parameters
+# ---------------------------------------------------------------------------
+# Prefer changing paths in configs/config.yaml. These CLI defaults are
+# repository-relative fallbacks for one-off commands.
+DEFAULT_CONFIG = Path("configs/config.yaml")
+DEFAULT_INTERIM_DIR = Path("data/interim")
+
+
+app = typer.Typer(help="Build the tRNA modification protein prediction dataset.")
 
 
 @app.command("ingest-uniprot")
 def ingest_uniprot(
-    config: Path = typer.Option(Path("configs/config.yaml"), help="Project config YAML."),
-    output: Path = typer.Option(Path("data/interim/uniprot/uniprot_records.parquet"), help="Output parquet."),
+    config: Path = typer.Option(DEFAULT_CONFIG, help="Project config YAML."),
+    output: Path = typer.Option(DEFAULT_INTERIM_DIR / "uniprot/uniprot_records.parquet", help="Output parquet."),
 ) -> None:
     """Normalize cached or fetched UniProt records."""
     frame = uniprot.ingest(config, output)
@@ -22,8 +31,8 @@ def ingest_uniprot(
 
 @app.command("ingest-rhea")
 def ingest_rhea(
-    config: Path = typer.Option(Path("configs/config.yaml"), help="Project config YAML."),
-    output: Path = typer.Option(Path("data/interim/rhea/rhea_reactions.parquet"), help="Output parquet."),
+    config: Path = typer.Option(DEFAULT_CONFIG, help="Project config YAML."),
+    output: Path = typer.Option(DEFAULT_INTERIM_DIR / "rhea/rhea_reactions.parquet", help="Output parquet."),
 ) -> None:
     """Normalize a cached/manual Rhea reaction table."""
     frame = rhea.ingest(config, output)
@@ -32,8 +41,8 @@ def ingest_rhea(
 
 @app.command("ingest-go")
 def ingest_go(
-    config: Path = typer.Option(Path("configs/config.yaml"), help="Project config YAML."),
-    output: Path = typer.Option(Path("data/interim/go/go_terms.parquet"), help="Output parquet."),
+    config: Path = typer.Option(DEFAULT_CONFIG, help="Project config YAML."),
+    output: Path = typer.Option(DEFAULT_INTERIM_DIR / "go/go_terms.parquet", help="Output parquet."),
 ) -> None:
     """Normalize GO RNA-modification terms from an OBO file."""
     frame = go.ingest(config, output)
@@ -42,8 +51,8 @@ def ingest_go(
 
 @app.command("ingest-modomics")
 def ingest_modomics(
-    config: Path = typer.Option(Path("configs/config.yaml"), help="Project config YAML."),
-    output: Path = typer.Option(Path("data/interim/modomics/modomics_records.parquet"), help="Output parquet."),
+    config: Path = typer.Option(DEFAULT_CONFIG, help="Project config YAML."),
+    output: Path = typer.Option(DEFAULT_INTERIM_DIR / "modomics/modomics_records.parquet", help="Output parquet."),
 ) -> None:
     """Normalize the permitted manual/API MODOMICS import table."""
     frame = modomics.ingest(config, output)
@@ -52,8 +61,8 @@ def ingest_modomics(
 
 @app.command("ingest-ecocyc")
 def ingest_ecocyc(
-    config: Path = typer.Option(Path("configs/config.yaml"), help="Project config YAML."),
-    output: Path = typer.Option(Path("data/interim/ecocyc/ecocyc_records.parquet"), help="Output parquet."),
+    config: Path = typer.Option(DEFAULT_CONFIG, help="Project config YAML."),
+    output: Path = typer.Option(DEFAULT_INTERIM_DIR / "ecocyc/ecocyc_records.parquet", help="Output parquet."),
 ) -> None:
     """Normalize the manual EcoCyc/BioCyc import table."""
     frame = ecocyc.ingest(config, output)
@@ -62,8 +71,8 @@ def ingest_ecocyc(
 
 @app.command("ingest-manual-literature")
 def ingest_manual_literature(
-    config: Path = typer.Option(Path("configs/config.yaml"), help="Project config YAML."),
-    output: Path = typer.Option(Path("data/interim/manual_literature/manual_literature_records.parquet"), help="Output parquet."),
+    config: Path = typer.Option(DEFAULT_CONFIG, help="Project config YAML."),
+    output: Path = typer.Option(DEFAULT_INTERIM_DIR / "manual_literature/manual_literature_records.parquet", help="Output parquet."),
 ) -> None:
     """Normalize manually curated literature seed records."""
     frame = manual_literature.ingest(config, output)
@@ -72,8 +81,8 @@ def ingest_manual_literature(
 
 @app.command("ingest-legacy-pilot")
 def ingest_legacy_pilot(
-    config: Path = typer.Option(Path("configs/config.yaml"), help="Project config YAML."),
-    output: Path = typer.Option(Path("data/interim/legacy_pilot/legacy_pilot_records.parquet"), help="Output parquet."),
+    config: Path = typer.Option(DEFAULT_CONFIG, help="Project config YAML."),
+    output: Path = typer.Option(DEFAULT_INTERIM_DIR / "legacy_pilot/legacy_pilot_records.parquet", help="Output parquet."),
 ) -> None:
     """Normalize the previous EDL933 pilot seed library as a legacy source."""
     frame = legacy_pilot.ingest(config, output)
@@ -82,7 +91,7 @@ def ingest_legacy_pilot(
 
 @app.command("build-master")
 def build_master(
-    config: Path = typer.Option(Path("configs/config.yaml"), help="Project config YAML."),
+    config: Path = typer.Option(DEFAULT_CONFIG, help="Project config YAML."),
 ) -> None:
     """Build master dataset, FASTA, label matrix, manifest, and dataset card."""
     outputs = build_master_table(config)
@@ -92,4 +101,3 @@ def build_master(
 
 if __name__ == "__main__":
     app()
-

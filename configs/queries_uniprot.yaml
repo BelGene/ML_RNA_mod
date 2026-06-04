@@ -1,4 +1,5 @@
 uniprot_endpoint: https://rest.uniprot.org/uniprotkb/search
+page_size: 500
 fields:
   - accession
   - reviewed
@@ -13,7 +14,6 @@ fields:
   - go_id
   - ec
   - rhea
-  - interpro
   - keyword
   - cc_function
 
@@ -33,4 +33,3 @@ queries:
   - query_id: reviewed_nonrna_deaminase_negative
     label_hint: negative
     query: '(reviewed:true) AND (taxonomy_id:2) AND ((protein_name:"cytidine deaminase") OR protein_name:"nucleotide deaminase") NOT (protein_name:tRNA)'
-

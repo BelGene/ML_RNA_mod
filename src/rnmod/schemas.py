@@ -1,5 +1,11 @@
 from __future__ import annotations
 
+# ---------------------------------------------------------------------------
+# User parameters
+# ---------------------------------------------------------------------------
+# This is a library module. Change routine pipeline parameters in
+# configs/config.yaml or in the numbered scripts under scripts/.
+
 import hashlib
 from typing import Any
 

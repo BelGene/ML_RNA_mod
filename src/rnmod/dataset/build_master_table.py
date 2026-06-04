@@ -1,5 +1,11 @@
 from __future__ import annotations
 
+# ---------------------------------------------------------------------------
+# User parameters
+# ---------------------------------------------------------------------------
+# This is a library module. Change routine pipeline parameters in
+# configs/config.yaml or in the numbered scripts under scripts/.
+
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -9,24 +15,32 @@ import pandas as pd
 from rnmod.dataset.dataset_cards import make_dataset_card
 from rnmod.labels.build_negatives import enforce_negative_policy
 from rnmod.schemas import CONTROLLED_VOCAB, MASTER_COLUMNS
-from rnmod.settings import load_config
+from rnmod.settings import interim_path, load_config, processed_path
 from rnmod.utils.checksums import file_md5, file_sha256
 from rnmod.utils.fasta import write_unique_fasta
 from rnmod.utils.tables import read_table, split_labels, write_parquet, write_tsv
 
 
-PROTEIN_INTERIM_PATHS = [
-    "data/interim/uniprot/uniprot_records.parquet",
-    "data/interim/modomics/modomics_records.parquet",
-    "data/interim/ecocyc/ecocyc_records.parquet",
-    "data/interim/manual_literature/manual_literature_records.parquet",
-    "data/interim/legacy_pilot/legacy_pilot_records.parquet",
-]
+PROTEIN_INTERIM_FILES = {
+    "uniprot": "uniprot_records.parquet",
+    "modomics": "modomics_records.parquet",
+    "ecocyc": "ecocyc_records.parquet",
+    "manual_literature": "manual_literature_records.parquet",
+    "legacy_pilot": "legacy_pilot_records.parquet",
+}
 
-NONPROTEIN_INTERIM_PATHS = [
-    "data/interim/rhea/rhea_reactions.parquet",
-    "data/interim/go/go_terms.parquet",
-]
+NONPROTEIN_INTERIM_FILES = {
+    "rhea": "rhea_reactions.parquet",
+    "go": "go_terms.parquet",
+}
+
+
+def protein_interim_paths(config: dict[str, Any]) -> list[Path]:
+    return [interim_path(config, source, filename) for source, filename in PROTEIN_INTERIM_FILES.items()]
+
+
+def nonprotein_interim_paths(config: dict[str, Any]) -> list[Path]:
+    return [interim_path(config, source, filename) for source, filename in NONPROTEIN_INTERIM_FILES.items()]
 
 
 def _refresh_training_flags(df: pd.DataFrame) -> pd.DataFrame:
@@ -49,7 +63,7 @@ def _refresh_training_flags(df: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
-def _load_protein_tables(paths: list[str]) -> pd.DataFrame:
+def _load_protein_tables(paths: list[str | Path]) -> pd.DataFrame:
     frames = []
     for path in paths:
         table = read_table(path)
@@ -117,14 +131,15 @@ def _manifest_rows(config: dict[str, Any]) -> list[dict[str, object]]:
     now = datetime.now(timezone.utc).isoformat()
     rows: list[dict[str, object]] = []
 
-    def add(name: str, source_type: str, path_or_url: str, notes: str = "") -> None:
-        path = Path(path_or_url)
-        is_url = path_or_url.startswith("http://") or path_or_url.startswith("https://")
+    def add(name: str, source_type: str, path_or_url: str | Path, notes: str = "") -> None:
+        value = str(path_or_url)
+        path = Path(value)
+        is_url = value.startswith("http://") or value.startswith("https://")
         rows.append(
             {
                 "source_name": name,
                 "source_type": source_type,
-                "path_or_url": path_or_url,
+                "path_or_url": value,
                 "access_date": now,
                 "exists": "" if is_url else path.exists(),
                 "md5": "" if is_url else file_md5(path),
@@ -152,7 +167,7 @@ def _manifest_rows(config: dict[str, Any]) -> list[dict[str, object]]:
     legacy_cfg = sources.get("legacy_pilot", {})
     for key in ["positive_fasta", "negative_fasta", "metadata"]:
         add(f"legacy_pilot_{key}", "legacy_input", legacy_cfg.get(key, ""))
-    for path in PROTEIN_INTERIM_PATHS + NONPROTEIN_INTERIM_PATHS:
+    for path in protein_interim_paths(config) + nonprotein_interim_paths(config):
         add(Path(path).stem, "normalized_interim", path)
     return rows
 
@@ -162,7 +177,7 @@ def build(config_path: str | Path = "configs/config.yaml") -> dict[str, Path]:
     processed_dir = Path(config["paths"]["processed_dir"])
     processed_dir.mkdir(parents=True, exist_ok=True)
 
-    master = _load_protein_tables(PROTEIN_INTERIM_PATHS)
+    master = _load_protein_tables(protein_interim_paths(config))
     master = enforce_negative_policy(master)
     master = _refresh_training_flags(master)
     master = _add_sequence_representatives(master)
@@ -173,12 +188,12 @@ def build(config_path: str | Path = "configs/config.yaml") -> dict[str, Path]:
         kind="mergesort",
     )
 
-    master_path = processed_dir / "rnmod_master.parquet"
-    master_tsv_path = processed_dir / "rnmod_master.tsv.gz"
-    fasta_path = processed_dir / "rnmod_sequences.faa"
-    label_path = processed_dir / "rnmod_label_matrix.parquet"
-    manifest_path = processed_dir / "source_manifest.tsv"
-    card_path = processed_dir / "rnmod_dataset_card.md"
+    master_path = processed_path(config, "rnmod_master.parquet")
+    master_tsv_path = processed_path(config, "rnmod_master.tsv.gz")
+    fasta_path = processed_path(config, "rnmod_sequences.faa")
+    label_path = processed_path(config, "rnmod_label_matrix.parquet")
+    manifest_path = processed_path(config, "source_manifest.tsv")
+    card_path = processed_path(config, "rnmod_dataset_card.md")
 
     write_parquet(master, master_path)
     write_tsv(master, master_tsv_path)
@@ -186,7 +201,7 @@ def build(config_path: str | Path = "configs/config.yaml") -> dict[str, Path]:
     write_parquet(_label_matrix(master), label_path)
     manifest = pd.DataFrame(_manifest_rows(config))
     write_tsv(manifest, manifest_path)
-    make_dataset_card(master, manifest, card_path)
+    make_dataset_card(master, manifest, card_path, title=config.get("project_title", "tRNA Modification Protein Prediction Dataset Pipeline"))
     return {
         "master": master_path,
         "master_tsv": master_tsv_path,
@@ -195,4 +210,3 @@ def build(config_path: str | Path = "configs/config.yaml") -> dict[str, Path]:
         "manifest": manifest_path,
         "card": card_path,
     }
-

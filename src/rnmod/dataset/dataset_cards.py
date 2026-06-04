@@ -1,5 +1,11 @@
 from __future__ import annotations
 
+# ---------------------------------------------------------------------------
+# User parameters
+# ---------------------------------------------------------------------------
+# This is a library module. Change routine pipeline parameters in
+# configs/config.yaml or in the numbered scripts under scripts/.
+
 from pathlib import Path
 
 import pandas as pd
@@ -41,7 +47,12 @@ def _markdown_counts(title: str, counts: pd.Series | dict[str, int]) -> list[str
     return lines
 
 
-def make_dataset_card(master: pd.DataFrame, manifest: pd.DataFrame, output: str | Path) -> None:
+def make_dataset_card(
+    master: pd.DataFrame,
+    manifest: pd.DataFrame,
+    output: str | Path,
+    title: str = "tRNA Modification Protein Prediction Dataset Pipeline",
+) -> None:
     out = Path(output)
     out.parent.mkdir(parents=True, exist_ok=True)
     n_records = len(master)
@@ -51,7 +62,7 @@ def make_dataset_card(master: pd.DataFrame, manifest: pd.DataFrame, output: str 
     n_train_neg = int(master["is_train_negative"].astype(bool).sum()) if not master.empty else 0
 
     lines = [
-        "# ML_RNA_mod Dataset Card",
+        f"# {title} Dataset Card",
         "",
         "This dataset is a curated MVP benchmark for bacterial and phage/prophage-associated RNA-modification proteins. It is intended for later protein language model embedding and classifier development, not for making functional claims about unvalidated proteins.",
         "",
@@ -93,4 +104,3 @@ def make_dataset_card(master: pd.DataFrame, manifest: pd.DataFrame, output: str 
         ]
     )
     out.write_text("\n".join(lines), encoding="utf-8")
-

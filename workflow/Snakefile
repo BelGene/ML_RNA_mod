@@ -1,90 +1,148 @@
 configfile: "configs/config.yaml"
 
+CONFIG_FILE = "configs/config.yaml"
+ENV_FILE = "envs/ml_rna_mod.yml"
+RAW_DIR = config["paths"]["raw_dir"]
+INTERIM_DIR = config["paths"]["interim_dir"]
+PROCESSED_DIR = config["paths"]["processed_dir"]
+
+DOWNLOAD_MARKER = f"{RAW_DIR}/.sources_downloaded.ok"
+
+UNIPROT_RECORDS = f"{INTERIM_DIR}/uniprot/uniprot_records.parquet"
+RHEA_REACTIONS = f"{INTERIM_DIR}/rhea/rhea_reactions.parquet"
+GO_TERMS = f"{INTERIM_DIR}/go/go_terms.parquet"
+MODOMICS_RECORDS = f"{INTERIM_DIR}/modomics/modomics_records.parquet"
+ECOCYC_RECORDS = f"{INTERIM_DIR}/ecocyc/ecocyc_records.parquet"
+MANUAL_LITERATURE_RECORDS = f"{INTERIM_DIR}/manual_literature/manual_literature_records.parquet"
+LEGACY_PILOT_RECORDS = f"{INTERIM_DIR}/legacy_pilot/legacy_pilot_records.parquet"
+
+MASTER = f"{PROCESSED_DIR}/rnmod_master.parquet"
+MASTER_TSV = f"{PROCESSED_DIR}/rnmod_master.tsv.gz"
+SEQUENCES = f"{PROCESSED_DIR}/rnmod_sequences.faa"
+LABEL_MATRIX = f"{PROCESSED_DIR}/rnmod_label_matrix.parquet"
+SOURCE_MANIFEST = f"{PROCESSED_DIR}/source_manifest.tsv"
+DATASET_CARD = f"{PROCESSED_DIR}/rnmod_dataset_card.md"
+
+
 rule all:
     input:
-        "data/processed/rnmod_master.parquet",
-        "data/processed/rnmod_master.tsv.gz",
-        "data/processed/rnmod_sequences.faa",
-        "data/processed/rnmod_label_matrix.parquet",
-        "data/processed/source_manifest.tsv",
-        "data/processed/rnmod_dataset_card.md"
+        MASTER,
+        MASTER_TSV,
+        SEQUENCES,
+        LABEL_MATRIX,
+        SOURCE_MANIFEST,
+        DATASET_CARD
+
+
+rule download_sources:
+    input:
+        config_file=CONFIG_FILE,
+        uniprot_query=config["sources"]["uniprot"]["query_config"]
+    output:
+        DOWNLOAD_MARKER
+    conda:
+        ENV_FILE
+    shell:
+        "PYTHONPATH=src python scripts/00_data_download/00_download_sources.py --config {input.config_file} --marker {output}"
+
 
 rule ingest_uniprot:
+    input:
+        DOWNLOAD_MARKER
     output:
-        "data/interim/uniprot/uniprot_records.parquet"
+        UNIPROT_RECORDS
     conda:
-        "envs/ml_rna_mod.yml"
+        ENV_FILE
     shell:
-        "PYTHONPATH=src python -m rnmod.cli ingest-uniprot --config configs/config.yaml --output {output}"
+        "PYTHONPATH=src python -m rnmod.cli ingest-uniprot --config {CONFIG_FILE} --output {output}"
+
 
 rule ingest_rhea:
+    input:
+        DOWNLOAD_MARKER
     output:
-        "data/interim/rhea/rhea_reactions.parquet"
+        RHEA_REACTIONS
     conda:
-        "envs/ml_rna_mod.yml"
+        ENV_FILE
     shell:
-        "PYTHONPATH=src python -m rnmod.cli ingest-rhea --config configs/config.yaml --output {output}"
+        "PYTHONPATH=src python -m rnmod.cli ingest-rhea --config {CONFIG_FILE} --output {output}"
+
 
 rule ingest_go:
+    input:
+        DOWNLOAD_MARKER
     output:
-        "data/interim/go/go_terms.parquet"
+        GO_TERMS
     conda:
-        "envs/ml_rna_mod.yml"
+        ENV_FILE
     shell:
-        "PYTHONPATH=src python -m rnmod.cli ingest-go --config configs/config.yaml --output {output}"
+        "PYTHONPATH=src python -m rnmod.cli ingest-go --config {CONFIG_FILE} --output {output}"
+
 
 rule ingest_modomics:
+    input:
+        DOWNLOAD_MARKER,
+        config["sources"]["modomics"]["manual_table"]
     output:
-        "data/interim/modomics/modomics_records.parquet"
+        MODOMICS_RECORDS
     conda:
-        "envs/ml_rna_mod.yml"
+        ENV_FILE
     shell:
-        "PYTHONPATH=src python -m rnmod.cli ingest-modomics --config configs/config.yaml --output {output}"
+        "PYTHONPATH=src python -m rnmod.cli ingest-modomics --config {CONFIG_FILE} --output {output}"
+
 
 rule ingest_ecocyc:
+    input:
+        DOWNLOAD_MARKER,
+        config["sources"]["ecocyc"]["manual_table"]
     output:
-        "data/interim/ecocyc/ecocyc_records.parquet"
+        ECOCYC_RECORDS
     conda:
-        "envs/ml_rna_mod.yml"
+        ENV_FILE
     shell:
-        "PYTHONPATH=src python -m rnmod.cli ingest-ecocyc --config configs/config.yaml --output {output}"
+        "PYTHONPATH=src python -m rnmod.cli ingest-ecocyc --config {CONFIG_FILE} --output {output}"
+
 
 rule ingest_manual_literature:
     input:
-        "data/manual/literature_seeds.tsv"
+        DOWNLOAD_MARKER,
+        config["sources"]["manual_literature"]["table"]
     output:
-        "data/interim/manual_literature/manual_literature_records.parquet"
+        MANUAL_LITERATURE_RECORDS
     conda:
-        "envs/ml_rna_mod.yml"
+        ENV_FILE
     shell:
-        "PYTHONPATH=src python -m rnmod.cli ingest-manual-literature --config configs/config.yaml --output {output}"
+        "PYTHONPATH=src python -m rnmod.cli ingest-manual-literature --config {CONFIG_FILE} --output {output}"
+
 
 rule ingest_legacy_pilot:
+    input:
+        DOWNLOAD_MARKER
     output:
-        "data/interim/legacy_pilot/legacy_pilot_records.parquet"
+        LEGACY_PILOT_RECORDS
     conda:
-        "envs/ml_rna_mod.yml"
+        ENV_FILE
     shell:
-        "PYTHONPATH=src python -m rnmod.cli ingest-legacy-pilot --config configs/config.yaml --output {output}"
+        "PYTHONPATH=src python -m rnmod.cli ingest-legacy-pilot --config {CONFIG_FILE} --output {output}"
+
 
 rule build_master:
     input:
-        uniprot="data/interim/uniprot/uniprot_records.parquet",
-        rhea="data/interim/rhea/rhea_reactions.parquet",
-        go="data/interim/go/go_terms.parquet",
-        modomics="data/interim/modomics/modomics_records.parquet",
-        ecocyc="data/interim/ecocyc/ecocyc_records.parquet",
-        manual="data/interim/manual_literature/manual_literature_records.parquet",
-        legacy="data/interim/legacy_pilot/legacy_pilot_records.parquet"
+        uniprot=UNIPROT_RECORDS,
+        rhea=RHEA_REACTIONS,
+        go=GO_TERMS,
+        modomics=MODOMICS_RECORDS,
+        ecocyc=ECOCYC_RECORDS,
+        manual=MANUAL_LITERATURE_RECORDS,
+        legacy=LEGACY_PILOT_RECORDS
     output:
-        master="data/processed/rnmod_master.parquet",
-        master_tsv="data/processed/rnmod_master.tsv.gz",
-        fasta="data/processed/rnmod_sequences.faa",
-        labels="data/processed/rnmod_label_matrix.parquet",
-        manifest="data/processed/source_manifest.tsv",
-        card="data/processed/rnmod_dataset_card.md"
+        master=MASTER,
+        master_tsv=MASTER_TSV,
+        fasta=SEQUENCES,
+        labels=LABEL_MATRIX,
+        manifest=SOURCE_MANIFEST,
+        card=DATASET_CARD
     conda:
-        "envs/ml_rna_mod.yml"
+        ENV_FILE
     shell:
-        "PYTHONPATH=src python -m rnmod.cli build-master --config configs/config.yaml"
-
+        "PYTHONPATH=src python -m rnmod.cli build-master --config {CONFIG_FILE}"

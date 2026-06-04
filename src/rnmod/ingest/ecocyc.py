@@ -1,5 +1,11 @@
 from __future__ import annotations
 
+# ---------------------------------------------------------------------------
+# User parameters
+# ---------------------------------------------------------------------------
+# This is a library module. Change routine pipeline parameters in
+# configs/config.yaml or in the numbered scripts under scripts/.
+
 from pathlib import Path
 
 import pandas as pd
@@ -10,7 +16,10 @@ from rnmod.settings import load_config
 
 def ingest(config_path: str | Path, output: str | Path) -> pd.DataFrame:
     config = load_config(config_path)
-    table_path = Path(config["sources"]["ecocyc"]["manual_table"])
+    source_cfg = config["sources"]["ecocyc"]
+    if not source_cfg.get("enabled", True):
+        return write_records([], output)
+    table_path = Path(source_cfg["manual_table"])
     if not table_path.exists():
         return write_records([], output)
     df = pd.read_csv(table_path, sep="\t", dtype=str, keep_default_na=False)
@@ -42,4 +51,3 @@ def ingest(config_path: str | Path, output: str | Path) -> pd.DataFrame:
             }
         )
     return write_records(records, output)
-

@@ -1,5 +1,11 @@
 from __future__ import annotations
 
+# ---------------------------------------------------------------------------
+# User parameters
+# ---------------------------------------------------------------------------
+# This is a library module. Change routine pipeline parameters in
+# configs/config.yaml or in the numbered scripts under scripts/.
+
 from pathlib import Path
 
 import pandas as pd
@@ -10,7 +16,10 @@ from rnmod.settings import load_config
 
 def ingest(config_path: str | Path, output: str | Path) -> pd.DataFrame:
     config = load_config(config_path)
-    source = config["sources"]["manual_literature"]["table"]
+    source_cfg = config["sources"]["manual_literature"]
+    if not source_cfg.get("enabled", True):
+        return write_records([], output)
+    source = source_cfg["table"]
     table_path = Path(source)
     if not table_path.exists():
         return write_records([], output)
@@ -45,4 +54,3 @@ def ingest(config_path: str | Path, output: str | Path) -> pd.DataFrame:
             }
         )
     return write_records(records, output)
-

@@ -1,14 +1,30 @@
 from __future__ import annotations
 
+# ---------------------------------------------------------------------------
+# User parameters
+# ---------------------------------------------------------------------------
+# This is a library module. Change routine pipeline parameters in
+# configs/config.yaml or in the numbered scripts under scripts/.
+
 from pathlib import Path
 
 import pandas as pd
+import requests
 
 from rnmod.settings import ensure_parent, load_config
 from rnmod.utils.tables import write_parquet
 
 
 RHEA_COLUMNS = ["rhea_id", "equation", "enzyme_class", "chemistry_hint", "source_database", "source_type"]
+
+
+def _download(url: str, output: Path) -> None:
+    if not url:
+        return
+    output.parent.mkdir(parents=True, exist_ok=True)
+    response = requests.get(url, timeout=120)
+    response.raise_for_status()
+    output.write_bytes(response.content)
 
 
 def _chemistry_hint(equation: str) -> str:
@@ -26,7 +42,14 @@ def _chemistry_hint(equation: str) -> str:
 
 def ingest(config_path: str | Path, output: str | Path) -> pd.DataFrame:
     config = load_config(config_path)
-    raw = Path(config["sources"]["rhea"]["raw_tsv"])
+    source_cfg = config["sources"]["rhea"]
+    if not source_cfg.get("enabled", True):
+        frame = pd.DataFrame(columns=RHEA_COLUMNS)
+        write_parquet(frame, ensure_parent(output))
+        return frame
+    raw = Path(source_cfg["raw_tsv"])
+    if source_cfg.get("enabled", True) and source_cfg.get("fetch", False) and not raw.exists():
+        _download(source_cfg.get("url", ""), raw)
     if not raw.exists():
         frame = pd.DataFrame(columns=RHEA_COLUMNS)
         write_parquet(frame, ensure_parent(output))
@@ -35,7 +58,7 @@ def ingest(config_path: str | Path, output: str | Path) -> pd.DataFrame:
     rows = []
     for _, row in df.iterrows():
         equation = row.get("Equation", row.get("equation", ""))
-        rhea_id = row.get("RHEA_ID", row.get("rhea_id", row.get("ID", "")))
+        rhea_id = row.get("RHEA_ID", row.get("REACTION_ID", row.get("rhea_id", row.get("ID", ""))))
         rows.append(
             {
                 "rhea_id": rhea_id,
@@ -49,4 +72,3 @@ def ingest(config_path: str | Path, output: str | Path) -> pd.DataFrame:
     frame = pd.DataFrame(rows, columns=RHEA_COLUMNS)
     write_parquet(frame.sort_values("rhea_id", kind="mergesort"), ensure_parent(output))
     return frame
-

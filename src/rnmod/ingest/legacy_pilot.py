@@ -1,5 +1,11 @@
 from __future__ import annotations
 
+# ---------------------------------------------------------------------------
+# User parameters
+# ---------------------------------------------------------------------------
+# This is a library module. Change routine pipeline parameters in
+# configs/config.yaml or in the numbered scripts under scripts/.
+
 import json
 from pathlib import Path
 
@@ -159,6 +165,8 @@ def _site_from_text(text: str) -> str:
 def ingest(config_path: str | Path, output: str | Path) -> pd.DataFrame:
     config = load_config(config_path)
     source_cfg = config["sources"]["legacy_pilot"]
+    if not source_cfg.get("enabled", False):
+        return write_records([], output)
     metadata = _load_metadata(Path(source_cfg["metadata"]))
     records: list[dict[str, object]] = []
     for posneg, key in (("positive", "positive_fasta"), ("negative", "negative_fasta")):
@@ -176,4 +184,3 @@ def ingest(config_path: str | Path, output: str | Path) -> pd.DataFrame:
                 )
             )
     return write_records(records, output)
-

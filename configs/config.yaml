@@ -1,4 +1,5 @@
-project_name: ML_RNA_mod
+project_name: trna_modification_protein_prediction
+project_title: "tRNA Modification Protein Prediction Dataset Pipeline"
 random_seed: 42
 
 paths:
@@ -6,23 +7,25 @@ paths:
   manual_dir: data/manual
   interim_dir: data/interim
   processed_dir: data/processed
-  legacy_pilot_dir: ../edl933-rnamod-phage-pilot
+  logs_dir: logs
 
 sources:
   uniprot:
     enabled: true
-    fetch: false
+    fetch: true
     reviewed_only: true
     include_trembl_expansion: false
     query_config: configs/queries_uniprot.yaml
     raw_tsv: data/raw/uniprot/uniprot_records.tsv
   rhea:
     enabled: true
-    fetch: false
-    raw_tsv: data/raw/rhea/rhea-reactions.tsv
+    fetch: true
+    url: https://ftp.expasy.org/databases/rhea/tsv/rhea-ec-iubmb.tsv
+    raw_tsv: data/raw/rhea/rhea-ec-iubmb.tsv
   go:
     enabled: true
-    fetch: false
+    fetch: true
+    url: https://purl.obolibrary.org/obo/go/go-basic.obo
     raw_obo: data/raw/go/go-basic.obo
   modomics:
     enabled: true
@@ -34,13 +37,15 @@ sources:
     enabled: true
     table: data/manual/literature_seeds.tsv
   legacy_pilot:
-    enabled: true
-    positive_fasta: ../edl933-rnamod-phage-pilot/resources/seeds/expanded_positive_rnamod_seeds.faa
-    negative_fasta: ../edl933-rnamod-phage-pilot/resources/seeds/expanded_negative_nonrna_seeds.faa
-    metadata: ../edl933-rnamod-phage-pilot/resources/seeds/expanded_seed_metadata.tsv
+    enabled: false
+    positive_fasta: data/raw/legacy_pilot/expanded_positive_rnamod_seeds.faa
+    negative_fasta: data/raw/legacy_pilot/expanded_negative_nonrna_seeds.faa
+    metadata: data/raw/legacy_pilot/expanded_seed_metadata.tsv
+    positive_fasta_url: ""
+    negative_fasta_url: ""
+    metadata_url: ""
 
 dataset:
   exclude_hypothetical_from_hard_negatives: true
   keep_sequence_missing_records: true
   deterministic_sort: true
-
