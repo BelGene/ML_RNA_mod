@@ -7,12 +7,14 @@ dependencies:
   - python=3.11
   - biopython
   - duckdb
+  - numpy
   - pandas
   - polars
   - pyarrow
   - pydantic
   - pyyaml
   - requests
+  - scikit-learn
   - typer
   - pytest
   - snakemake-minimal
@@ -20,4 +22,3 @@ dependencies:
   - hmmer
   - mafft
   - pip
-

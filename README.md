@@ -7,8 +7,12 @@ contexts.
 
 The current deliverable is dataset construction: source download, source
 normalization, label assignment, train/test policy fields, sequence FASTA
-generation, and an auditable dataset card. Embeddings and classifiers are later
-phases.
+generation, and an auditable dataset card.
+
+For a lightweight proof of concept, this repository also includes a simpler
+MODOMICS-only path: retrieve curated tRNA-modification proteins, use MODOMICS
+enzyme type as the prediction label, and train a small classifier from frozen
+protein embeddings.
 
 ## What Is Tracked
 
@@ -45,6 +49,49 @@ Validate generated outputs:
 ```bash
 python scripts/02_validation/02_validate_outputs.py --config configs/config.yaml
 ```
+
+## Simple POC Workflow
+
+Use this path when the goal is only to prove that curated tRNA-modifier labels
+can be learned from protein embeddings.
+
+Build the MODOMICS tRNA protein dataset:
+
+```bash
+python scripts/03_poc/01_build_modomics_trna_dataset.py
+```
+
+This writes:
+
+```text
+data/processed/poc/modomics_trna_proteins.tsv
+data/processed/poc/modomics_trna_sequences.faa
+data/processed/poc/modomics_trna_label_matrix.tsv
+data/processed/poc/modomics_trna_dataset_card.md
+```
+
+Then generate ESM3 embeddings for the FASTA sequences with your preferred
+embedding script. Save one `.pt` or `.npy` file per UniProt accession, for
+example:
+
+```text
+P53088_hidden_layer_steps10.pt
+Q58428_hidden_layer_steps10.pt
+```
+
+Loading `.pt` embeddings requires `torch`; `.npy` embeddings only require NumPy.
+
+Train the proof-of-concept classifier:
+
+```bash
+python scripts/03_poc/02_train_embedding_logreg.py \
+  --embedding-dir path/to/esm3_embeddings \
+  --output-dir data/processed/poc/ml_runs \
+  --run-name modomics_trna_logreg
+```
+
+The trainer mean-pools each embedding and fits one-vs-rest logistic-regression
+models for MODOMICS enzyme-type labels with cross-validation.
 
 ## Pipeline Order
 
