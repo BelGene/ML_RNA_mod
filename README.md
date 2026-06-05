@@ -173,6 +173,92 @@ python scripts/03_poc/06_embed_sequences_esmc.py \
 On Bridges/Slurm, see `docs/POC_ESMC_BRIDGES.md` and
 `scripts/03_poc/bridges_esmc_embed.sbatch`.
 
+## Current ESM-C Weak-Label Results
+
+The current proof-of-concept run uses frozen, mean-pooled ESM-C 6B embeddings
+for the weak-label UniProt/MODOMICS dataset. The robust model pipeline is in
+`scripts/03_poc/08_train_weak_embedding_robust_models.py`; it selects
+regularization on validation AUPR, selects classification thresholds on
+validation F1, refits each selected model on train+validation, and evaluates
+once on the held-out test split.
+
+The final run is stored under:
+
+```text
+data/processed/poc_weak/ml_runs/esmc6b_robust_logreg/
+```
+
+Key audit facts:
+
+- Embedded proteins: `2411`
+- Split sizes: `1687` train, `362` validation, `362` test
+- Cluster split leakage: `False`
+- Duplicate accessions: `0`
+- Duplicate embedding groups spanning splits: `0`
+- Model artifacts: one `.joblib` classifier per included label
+
+Label scope matters. The binary `trna_modifier` classifier uses all trainable
+rows. Mechanism classifiers use only `mechanism_labeled` tRNA-modifier rows, so
+unrelated non-tRNA proteins are not counted as mechanism negatives.
+
+Aggregate held-out performance:
+
+| Family | Labels | Test micro AUPR | Test micro AUROC | Test macro AUPR | Test macro AUROC | Test macro F1 |
+|---|---:|---:|---:|---:|---:|---:|
+| Binary `trna_modifier` | 1 | 0.990 | 0.992 | 0.990 | 0.992 | 0.988 |
+| Mechanism one-vs-rest | 8 | 0.955 | 0.973 | 0.802 | 0.978 | 0.711 |
+
+Held-out test metrics by label:
+
+| Label | Positives | AUPR | AUROC | Precision | Recall | F1 | Balanced Accuracy |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| `trna_modifier` | 214 | 0.990 | 0.992 | 0.995 | 0.981 | 0.988 | 0.987 |
+| `deaminase` | 2 | 0.524 | 0.905 | 0.333 | 0.500 | 0.400 | 0.745 |
+| `dihydrouridine_synthase` | 17 | 1.000 | 1.000 | 1.000 | 1.000 | 1.000 | 1.000 |
+| `methyltransferase` | 15 | 0.909 | 0.992 | 0.833 | 0.667 | 0.741 | 0.828 |
+| `pseudouridine_synthase` | 31 | 0.994 | 0.999 | 1.000 | 0.968 | 0.984 | 0.984 |
+| `queuosine_pathway` | 12 | 1.000 | 1.000 | 0.750 | 1.000 | 0.857 | 0.990 |
+| `t6a_pathway` | 17 | 0.884 | 0.976 | 0.667 | 0.824 | 0.737 | 0.894 |
+| `thiolation` | 122 | 0.996 | 0.993 | 0.991 | 0.951 | 0.971 | 0.970 |
+| `wyosine_pathway` | 1 | 0.111 | 0.962 | 0.000 | 0.000 | 0.000 | 0.500 |
+
+`acetyltransferase` was skipped because it had only 2 training positives and 0
+test positives. `deaminase`, `dihydrouridine_synthase`, and `wyosine_pathway`
+have very low validation and/or test positive counts, so their threshold-based
+metrics should be treated as exploratory. High AUROC with one or two positives
+is not enough to claim a robust classifier; AUPR, precision/recall, and positive
+counts are more informative for these rare mechanisms.
+
+### Figures
+
+The metric bars summarize the held-out test behavior across labels. They make
+the core pattern clear: the binary task is very strong, common mechanism labels
+such as thiolation and pseudouridine synthase are strong, and rare labels remain
+unstable.
+
+![Held-out test metric bars](data/processed/poc_weak/ml_runs/esmc6b_robust_logreg/plots/test_metric_bars.png)
+
+Precision-recall curves are the most useful view for these imbalanced labels.
+The mechanism micro-AUPR is high, but the macro-AUPR is lower because rare labels
+such as deaminase and wyosine pathway have too few positives for stable
+thresholding.
+
+![Held-out test precision-recall curves](data/processed/poc_weak/ml_runs/esmc6b_robust_logreg/plots/test_precision_recall_curves.png)
+
+ROC curves look strong for most labels, but they can be optimistic under severe
+class imbalance. Interpret them alongside AUPR and the label-prevalence plot.
+
+![Held-out test ROC curves](data/processed/poc_weak/ml_runs/esmc6b_robust_logreg/plots/test_roc_curves.png)
+
+The prevalence plot is the guardrail for interpretation: labels with very small
+test positive counts can produce impressive-looking rank metrics while still
+being biologically underpowered.
+
+![Held-out test label prevalence](data/processed/poc_weak/ml_runs/esmc6b_robust_logreg/plots/test_label_prevalence.png)
+
+The short audit report is tracked at
+`data/processed/poc_weak/ml_runs/esmc6b_robust_logreg/audit_summary.md`.
+
 ## Pipeline Order
 
 1. `scripts/00_data_download/00_download_sources.py` downloads configured public raw sources.
