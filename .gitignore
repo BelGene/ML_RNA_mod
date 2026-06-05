@@ -3,6 +3,8 @@
 __pycache__/
 *.pyc
 *.egg-info/
+*.err
+*.out
 .DS_Store
 data/raw/*
 !data/raw/README.md

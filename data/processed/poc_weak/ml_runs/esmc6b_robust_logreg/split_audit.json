@@ -1,0 +1,19 @@
+{
+  "cluster_split_leakage": false,
+  "clusters_spanning_splits": 0,
+  "duplicate_accession_rows": 0,
+  "duplicate_embedding_groups": 116,
+  "duplicate_embedding_groups_spanning_splits": 0,
+  "embedding_duplicate_split_leakage": false,
+  "example_duplicate_embedding_split_groups": [],
+  "example_leaky_clusters": [],
+  "missing_split_rows": 0,
+  "n_embedded_rows": 2411,
+  "n_label_rows_valid_split": 2411,
+  "n_unique_accessions": 2411,
+  "split_counts": {
+    "test": 362,
+    "train": 1687,
+    "val": 362
+  }
+}

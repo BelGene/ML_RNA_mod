@@ -22,11 +22,23 @@ Proof-of-concept path:
    mechanism logistic-regression models from precomputed embeddings.
 6. `03_poc/06_embed_sequences_esmc.py`: generate one mean-pooled ESM-C `.npy`
    embedding per FASTA record. Intended to run on a GPU machine.
+7. `03_poc/07_train_weak_embedding_lazypredict.py`: screen many classical
+   classifiers with LazyPredict using the MMseqs train/validation/test split
+   and write result tables plus plots.
+8. `03_poc/08_train_weak_embedding_robust_models.py`: train final
+   regularized logistic-regression models from frozen embeddings. It selects
+   regularization and thresholds on validation data, refits on train+validation,
+   evaluates once on the held-out test split, writes AUROC/AUPR/precision plots,
+   and saves one deployable model artifact per label.
 
 Batch templates:
 
 - `03_poc/bridges_esmc_embed.sbatch`: single-GPU Bridges/Slurm template for
   embedding the weak-POC FASTA with ESM-C 6B by default.
+- `03_poc/bridges_lazypredict_ml.sbatch`: CPU/RM Bridges/Slurm template for
+  LazyPredict model screening from the frozen ESM-C embeddings.
+- `03_poc/bridges_robust_ml.sbatch`: lower-cost CPU/RM Bridges/Slurm template
+  for the final robust logistic-regression model run.
 
 Each script has a user-parameter section at the top. Routine path and source
 changes should still be made in `configs/config.yaml`.

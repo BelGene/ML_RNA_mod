@@ -1,0 +1,10 @@
+label	family	scope	model_path	selected_C	threshold	test_aupr	test_auroc	test_f1	test_precision	test_recall
+trna_modifier	binary	all_trainable	data/processed/poc_weak/ml_runs/esmc6b_robust_logreg/models/trna_modifier.joblib	10.0	0.2642141580581665	0.9904819233816048	0.9918224299065421	0.9882352941176471	0.995260663507109	0.9813084112149533
+deaminase	mechanism	mechanism_labeled	data/processed/poc_weak/ml_runs/esmc6b_robust_logreg/models/deaminase.joblib	0.003	0.8252683281898499	0.5238095238095238	0.9047619047619048	0.4	0.3333333333333333	0.5
+dihydrouridine_synthase	mechanism	mechanism_labeled	data/processed/poc_weak/ml_runs/esmc6b_robust_logreg/models/dihydrouridine_synthase.joblib	0.003	0.9502519965171814	1.0	1.0	1.0	1.0	1.0
+methyltransferase	mechanism	mechanism_labeled	data/processed/poc_weak/ml_runs/esmc6b_robust_logreg/models/methyltransferase.joblib	10.0	0.9469910860061646	0.9086523515470883	0.9922165820642979	0.7407407407407407	0.8333333333333334	0.6666666666666666
+pseudouridine_synthase	mechanism	mechanism_labeled	data/processed/poc_weak/ml_runs/esmc6b_robust_logreg/models/pseudouridine_synthase.joblib	0.03	0.8666822910308838	0.9940577249575551	0.9987524505435751	0.9836065573770492	1.0	0.967741935483871
+queuosine_pathway	mechanism	mechanism_labeled	data/processed/poc_weak/ml_runs/esmc6b_robust_logreg/models/queuosine_pathway.joblib	10.0	0.4863612949848175	1.0	1.0	0.8571428571428571	0.75	1.0
+t6a_pathway	mechanism	mechanism_labeled	data/processed/poc_weak/ml_runs/esmc6b_robust_logreg/models/t6a_pathway.joblib	10.0	0.1490994244813919	0.8841655341834318	0.9755656108597286	0.7368421052631579	0.6666666666666666	0.8235294117647058
+thiolation	mechanism	mechanism_labeled	data/processed/poc_weak/ml_runs/esmc6b_robust_logreg/models/thiolation.joblib	10.0	0.8392766714096069	0.9956727855949625	0.9927140255009107	0.9707112970711297	0.9914529914529915	0.9508196721311475
+wyosine_pathway	mechanism	mechanism_labeled	data/processed/poc_weak/ml_runs/esmc6b_robust_logreg/models/wyosine_pathway.joblib	0.003	0.9068943858146667	0.1111111111111111	0.962085308056872	0.0	0.0	0.0

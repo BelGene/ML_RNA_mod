@@ -1,0 +1,27 @@
+{
+  "c_grid": [
+    0.003,
+    0.01,
+    0.03,
+    0.1,
+    0.3,
+    1.0,
+    3.0,
+    10.0
+  ],
+  "dry_run": false,
+  "embedding_dir": "data/processed/poc_weak/embeddings/esmc_6b",
+  "embedding_glob": "*",
+  "label_matrix": "data/processed/poc_weak/weak_trna_mod_label_matrix.tsv",
+  "mechanism_scope": "mechanism_labeled",
+  "min_test_positives": 1,
+  "min_train_positives": 10,
+  "min_val_positives": 1,
+  "n_features": 2560,
+  "n_samples_with_embeddings": 2411,
+  "random_seed": 42,
+  "rank_metric": "aupr",
+  "split_assignments": "data/processed/poc_weak/splits/mmseqs50/split_assignments.tsv",
+  "task": "all",
+  "threshold_metric": "f1"
+}

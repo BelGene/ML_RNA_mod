@@ -1,0 +1,11 @@
+label	label_column	family	scope	n_train	n_val	n_test	train_positives	val_positives	test_positives	train_negatives	val_negatives	test_negatives	low_val_positives	low_test_positives	included	skip_reason
+trna_modifier	target__trna_modifier	binary	all_trainable	1687	362	362	999	214	214	688	148	148	False	False	True	none
+acetyltransferase	mechanism__acetyltransferase	mechanism	mechanism_labeled	983	209	212	2	2	0	981	207	212	True	True	False	train positives < 10
+deaminase	mechanism__deaminase	mechanism	mechanism_labeled	983	209	212	34	1	2	949	208	210	True	True	True	none
+dihydrouridine_synthase	mechanism__dihydrouridine_synthase	mechanism	mechanism_labeled	983	209	212	56	1	17	927	208	195	True	False	True	none
+methyltransferase	mechanism__methyltransferase	mechanism	mechanism_labeled	983	209	212	275	24	15	708	185	197	False	False	True	none
+pseudouridine_synthase	mechanism__pseudouridine_synthase	mechanism	mechanism_labeled	983	209	212	208	28	31	775	181	181	False	False	True	none
+queuosine_pathway	mechanism__queuosine_pathway	mechanism	mechanism_labeled	983	209	212	136	110	12	847	99	200	False	False	True	none
+t6a_pathway	mechanism__t6a_pathway	mechanism	mechanism_labeled	983	209	212	155	25	17	828	184	195	False	False	True	none
+thiolation	mechanism__thiolation	mechanism	mechanism_labeled	983	209	212	124	22	122	859	187	90	False	False	True	none
+wyosine_pathway	mechanism__wyosine_pathway	mechanism	mechanism_labeled	983	209	212	12	1	1	971	208	211	True	True	True	none

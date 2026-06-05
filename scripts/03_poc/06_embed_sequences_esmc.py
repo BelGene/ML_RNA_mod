@@ -7,6 +7,7 @@ import argparse
 import json
 import os
 import sys
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
@@ -29,6 +30,10 @@ class FastaRecord:
     accession: str
     header: str
     sequence: str
+
+
+def log(message: str) -> None:
+    print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] {message}", flush=True)
 
 
 def find_repo_root(start: Path) -> Path:
@@ -167,6 +172,7 @@ def mean_pool_embeddings(outputs, encoded) -> np.ndarray:
 
 def main() -> None:
     args = parse_args()
+    log("import_start torch transformers")
     try:
         import torch
         from transformers import AutoTokenizer
@@ -174,20 +180,28 @@ def main() -> None:
         raise SystemExit(
             "This script requires torch and transformers. Install them in the Bridges environment before running."
         ) from exc
+    log("import_complete")
 
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     manifest_path = output_dir / "embedding_manifest.tsv"
+    log(f"read_fasta_start path={args.fasta}")
     records = list(iter_fasta(args.fasta))
     if args.limit:
         records = records[: args.limit]
+    log(f"read_fasta_complete records={len(records)} limit={args.limit}")
 
     device = choose_device(args.device)
     dtype = choose_dtype(args.dtype, device)
-    print(f"loading {args.model_name} on device={device} device_map={args.device_map} dtype={dtype}")
+    log(f"loading_start model={args.model_name} device={device} device_map={args.device_map} dtype={dtype}")
+    log("tokenizer_load_start")
     tokenizer = AutoTokenizer.from_pretrained(args.model_name, trust_remote_code=True)
+    log("tokenizer_load_complete")
+    log("model_load_start")
     model = load_model(args.model_name, dtype=dtype, device=device, device_map=args.device_map)
+    log("model_load_complete")
     input_device = get_input_device(model, device)
+    log(f"input_device={input_device}")
 
     rows: list[dict[str, object]] = []
     completed = 0

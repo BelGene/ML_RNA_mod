@@ -128,3 +128,48 @@ python scripts/03_poc/05_train_weak_embedding_logreg.py \
   --embedding-dir data/processed/poc_weak/embeddings/esmc_6b \
   --task binary
 ```
+
+For a broader classical-ML screen, install the optional ML packages and run
+LazyPredict on the same MMseqs train/validation/test split:
+
+```bash
+python -m pip install ".[ml]"
+
+python scripts/03_poc/07_train_weak_embedding_lazypredict.py \
+  --embedding-dir data/processed/poc_weak/embeddings/esmc_6b \
+  --task binary \
+  --run-name esmc6b_lazypredict_binary
+```
+
+On Bridges, submit the CPU-only RM template instead:
+
+```bash
+sbatch scripts/03_poc/bridges_lazypredict_ml.sbatch
+```
+
+For the final split-aware model artifacts and stricter evaluation report, run
+the robust logistic-regression pipeline. This keeps the MMseqs train/validation/
+test split fixed, selects regularization and thresholds on validation data,
+refits on train+validation, evaluates once on held-out test data, and writes one
+saved `.joblib` model per label:
+
+```bash
+RUN_NAME=esmc6b_robust_logreg \
+TASK=all \
+MECHANISM_SCOPE=mechanism_labeled \
+MIN_TRAIN_POSITIVES=10 \
+MIN_VAL_POSITIVES=1 \
+MIN_TEST_POSITIVES=1 \
+sbatch scripts/03_poc/bridges_robust_ml.sbatch
+```
+
+Key outputs:
+
+```text
+data/processed/poc_weak/ml_runs/esmc6b_robust_logreg/audit_summary.md
+data/processed/poc_weak/ml_runs/esmc6b_robust_logreg/per_label_metrics.tsv
+data/processed/poc_weak/ml_runs/esmc6b_robust_logreg/aggregate_metrics.tsv
+data/processed/poc_weak/ml_runs/esmc6b_robust_logreg/model_index.tsv
+data/processed/poc_weak/ml_runs/esmc6b_robust_logreg/models/*.joblib
+data/processed/poc_weak/ml_runs/esmc6b_robust_logreg/plots/*.png
+```
